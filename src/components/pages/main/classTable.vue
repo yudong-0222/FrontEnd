@@ -70,7 +70,8 @@
           @pointerdown="startTimeSelection"
           @pointermove="moveTimeSelection"
           @pointerup="finishTimeSelection"
-          @pointercancel="finishTimeSelection">
+          @pointercancel="finishTimeSelection"
+          @contextmenu="handleTimeSearchContextMenu">
           <div
             v-for="day in weekdays"
             :key="day.value"
@@ -288,6 +289,14 @@ const selectedTimeLabel = computed(() => {
   return `${formatMinute(selectedSession.value.startMinute)}–${formatMinute(selectedSession.value.endMinute)}`;
 });
 
+function handleTimeSearchContextMenu(event) {
+  //避免無腦 preventDefault 將所有情況都攔截
+  if (!canSelectTime.value || !hasSelection.value) return;
+
+  event.preventDefault();
+  submitTimeSelection();
+}
+
 const timeSelection = reactive({
   weekday: 0,
   startIndex: -1,
@@ -438,7 +447,14 @@ function pointerToSelection(event) {
 
 function startTimeSelection(event) {
   if (!canSelectTime.value) return;
+  
+  if (event.button === 2 && hasSelection.value) {
+    event.preventDefault();
+    return;
+  }
+
   event.preventDefault();
+
   const point = pointerToSelection(event);
   if (!point) return;
   event.currentTarget.setPointerCapture?.(event.pointerId);
