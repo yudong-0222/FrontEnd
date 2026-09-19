@@ -2,9 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-.selectDisplayColor {
-  @apply bg-orange-300/50;
+.timeline-selection-guide {
+  position: absolute;
+  right: 0.05rem;
+  width: 0.2rem;
+  background: rgb(37 99 235 / 0.8);
+  z-index: 20;
+  pointer-events: none;
 }
+
+.timeline-selection-highlight {
+  position: absolute;
+  z-index: 30;
+  border: 2px solid rgb(37 99 235 / 0.8);
+  background: rgb(37 99 235 / 0.15);
+  pointer-events: none;
+}
+
 .conflict {
   @apply bg-red-300;
 }
@@ -30,16 +44,7 @@ img {
 .btn-comment {
   @apply text-center shadow-2xl font-medium mx-2 px-5 py-1 border-2 border-[#aefff7] bg-[#aefff7] rounded-lg hover:bg-transparent hover:text-white duration-500;
 }
-.virtualtablehead {
-  @apply h-[1.9rem];
-}
-.virtualtable {
-  @apply min-w-[8.22rem] text-center py-1.5;
-}
-#virtualtablediv > div {
-  border-collapse: separate;
-  display: table;
-}
+
 table {
   table-layout: fixed;
 }

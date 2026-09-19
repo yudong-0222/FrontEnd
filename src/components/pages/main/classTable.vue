@@ -1,146 +1,42 @@
 <template>
   <div class="overflow-x-auto select-none">
     <div
+      v-if="TimeMode"
+      class="mx-auto mb-2 flex max-w-[60rem] items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+      <div>
+        <p class="font-semibold">拖曳選取要搜尋的時段</p>
+
+        <p class="text-sm text-gray-600">
+          {{ selectedRangeLabel || "請在課表中拖曳選取時段" }}
+        </p>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          type="button"
+          class="rounded-lg bg-white px-3 py-1 shadow disabled:opacity-40"
+          :disabled="!hasTimeSelection"
+          @click="clearTimeSelection">
+          清除
+        </button>
+
+        <button
+          type="button"
+          class="rounded-lg bg-blue-600 px-3 py-1 text-white disabled:opacity-40"
+          :disabled="!hasTimeSelection"
+          @click="submitTimeSelection">
+          搜尋此時段
+        </button>
+      </div>
+    </div>
+    <div
       class="bg-orange-100 rounded-lg px-2 my-3 py-2 mx-auto max-w-[60rem]"
       id="WholeTable">
       <p class="text-right py-2 mx-3" v-show="show_credit">
         目前學分: {{ TotalCourseData[activeIndex].credit }}
       </p>
       <div class="relative inset-0">
-        <div
-          v-if="TimeMode"
-          id="virtualtablediv"
-          class="absolute w-full h-full left-0 top-0 z-20 bg-opacity-1 flex"
-          @contextmenu.prevent="showsearchclass">
-          <div class="w-[0.5rem]">
-            <div class="h-10"></div>
-            <div
-              v-for="item in selectDisplay"
-              class="h-[52px]"
-              :class="{ selectDisplayColor: item.display }"></div>
-          </div>
-          <div class="table-head w-[8.5rem]"></div>
-
-          <div class="virtualtable flex-1 w-0">
-            <div class="virtualtablehead"></div>
-            <drag-select
-              v-model="selection"
-              background="rgba(254, 255, 166, 0.1)">
-              <drag-select-option
-                v-for="item in selectClassTable[0]"
-                style="height: 52px"
-                :value="item.val"
-                :key="item.id">
-                {{}}
-              </drag-select-option>
-            </drag-select>
-          </div>
-          <div class="virtualtable flex-1 w-0">
-            <div class="virtualtablehead"></div>
-            <drag-select
-              v-model="selection"
-              background="rgba(254, 255, 166, 0.1)">
-              <drag-select-option
-                v-for="item in selectClassTable[1]"
-                style="height: 52px"
-                :value="item.val"
-                :key="item.id">
-                {{}}
-              </drag-select-option>
-            </drag-select>
-          </div>
-          <div class="virtualtable flex-1 w-0">
-            <div class="virtualtablehead"></div>
-            <drag-select
-              v-model="selection"
-              background="rgba(254, 255, 166, 0.1)">
-              <drag-select-option
-                v-for="item in selectClassTable[2]"
-                style="height: 52px"
-                :value="item.val"
-                :key="item.id">
-                {{}}
-              </drag-select-option>
-            </drag-select>
-          </div>
-          <div class="virtualtable flex-1 w-0">
-            <div class="virtualtablehead"></div>
-            <drag-select
-              v-model="selection"
-              background="rgba(254, 255, 166, 0.1)">
-              <drag-select-option
-                v-for="item in selectClassTable[3]"
-                style="height: 52px"
-                :value="item.val"
-                :key="item.id">
-                {{}}
-              </drag-select-option>
-            </drag-select>
-          </div>
-          <div class="virtualtable flex-1 w-0">
-            <div class="virtualtablehead"></div>
-            <drag-select
-              v-model="selection"
-              background="rgba(254, 255, 166, 0.1)">
-              <drag-select-option
-                v-for="item in selectClassTable[4]"
-                style="height: 52px"
-                :value="item.val"
-                :key="item.id">
-                {{}}
-              </drag-select-option>
-            </drag-select>
-          </div>
-          <div class="virtualtable flex-1 w-0">
-            <div class="virtualtablehead"></div>
-            <drag-select
-              v-model="selection"
-              background="rgba(254, 255, 166, 0.1)">
-              <drag-select-option
-                v-for="item in selectClassTable[5]"
-                style="height: 52px"
-                :value="item.val"
-                :key="item.id">
-                {{}}
-              </drag-select-option>
-            </drag-select>
-          </div>
-        </div>
-
-        <div v-if="TimeMode" class="z-10 w-full flex">
-          <table
-            class="bg-orange-100 w-full border-separate"
-            id="class_table">
-            <thead>
-              <tr>
-                <th class="w-[0.5rem] m-1">⠀</th>
-                <th class="table-head w-[8.5rem]" colspan="2">
-                  節次
-                </th>
-
-                <th
-                  v-for="weekday in week"
-                  :key="weekday"
-                  class="table-head">
-                  星期{{ weekday }}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody v-if="show">
-              <tr
-                v-for="row in TotalCourseData[activeIndex]
-                  .classStorage"
-                :key="row.id">
-                <courseCard
-                  v-for="item in row"
-                  :key="item.id"
-                  :item="item" />
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-else class="w-full">
+        <div class="w-full">
           <!-- Header -->
           <div
             class="grid border-b border-orange-300/50"
@@ -170,10 +66,15 @@
               :style="{
                 height: `${timelineHeight}px`,
               }">
+              <div
+                v-if="TimeMode && hasTimeSelection"
+                class="timeline-selection-guide"
+                :style="timeSelectionGuideStyle" />
+
               <span
                 v-for="hour in timelineHours"
                 :key="hour"
-                class="absolute inset-x-0 text-center text-[10px] leading-none text-orange-900/70"
+                class="absolute inset-x-0 z-10 text-center text-[10px] leading-none text-orange-900/70"
                 :style="{
                   top: `${minuteToTimelineOffset(hour * 60)}px`,
                   transform:
@@ -188,7 +89,15 @@
             </aside>
 
             <!-- Six weekday lanes -->
-            <div class="grid grid-cols-6 min-w-0">
+            <div
+              ref="timelineDays"
+              class="relative grid grid-cols-6 min-w-0"
+              :class="{ 'cursor-crosshair': TimeMode }"
+              @pointerdown="startTimeSelection"
+              @pointermove="moveTimeSelection"
+              @pointerup="finishTimeSelection"
+              @pointercancel="finishTimeSelection"
+              @contextmenu="handleTimeSearchContextMenu">
               <div
                 v-for="weekday in week"
                 :key="weekday"
@@ -210,9 +119,10 @@
                   v-for="session in sessionsByDay[weekday]"
                   :key="session.key"
                   type="button"
+                  :class="{ 'pointer-events-none': TimeMode }"
                   class="absolute inset-x-0.5 z-10 cursor-pointer overflow-hidden rounded-md border border-white/70 px-1 py-0.5 text-center shadow-sm transition hover:brightness-95"
                   :style="sessionStyle(session)"
-                  @click="openCourseDetails(session)">
+                  @click="!TimeMode && openCourseDetails(session)">
                   <div
                     class="flex h-full min-w-0 flex-col items-center justify-center overflow-hidden">
                     <span class="w-full text-[10px] leading-tight">
@@ -233,6 +143,10 @@
                   </div>
                 </button>
               </div>
+              <div
+                v-if="TimeMode && hasTimeSelection"
+                class="timeline-selection-highlight"
+                :style="timeSelectionStyle" />
             </div>
           </div>
         </div>
@@ -385,8 +299,6 @@ import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import { useStore } from "vuex";
 
-const selection = ref([]);
-
 const store = useStore();
 store.dispatch("initAll");
 const status = computed(() => store.state.course.show);
@@ -456,10 +368,243 @@ let checked = ref(false);
 let show = ref(1);
 let data = ref([]);
 let show_search_box = ref(true);
-let selectClassTable = ref([]);
-let selectDisplay = ref([]);
 
 let TimeMode = computed(() => store.state.course.timeSearchMode);
+
+const timelineDays = ref(null);
+
+const timeSelection = reactive({
+  weekday: 0,
+  startIndex: -1,
+  endIndex: -1,
+  dragging: false,
+});
+
+const hasTimeSelection = computed(
+  () =>
+    timeSelection.weekday > 0 &&
+    timeSelection.startIndex >= 0 &&
+    timeSelection.endIndex >= 0,
+);
+
+const normalizedTimeSelection = computed(() => {
+  if (!hasTimeSelection.value) {
+    return null;
+  }
+
+  return {
+    weekday: timeSelection.weekday,
+    startIndex: Math.min(
+      timeSelection.startIndex,
+      timeSelection.endIndex,
+    ),
+    endIndex: Math.max(
+      timeSelection.startIndex,
+      timeSelection.endIndex,
+    ),
+  };
+});
+
+const selectedRangeLabel = computed(() => {
+  const selection = normalizedTimeSelection.value;
+
+  if (!selection) {
+    return "";
+  }
+
+  const startMinute =
+    TIMELINE_START_MINUTE +
+    selection.startIndex * TIMELINE_SLOT_MINUTES;
+
+  const endMinute =
+    TIMELINE_START_MINUTE +
+    (selection.endIndex + 1) * TIMELINE_SLOT_MINUTES;
+
+  return `星期${week[selection.weekday - 1]} ${formatMinute(
+    startMinute,
+  )} – ${formatMinute(endMinute)}`;
+});
+
+function clearTimeSelection() {
+  timeSelection.weekday = 0;
+  timeSelection.startIndex = -1;
+  timeSelection.endIndex = -1;
+  timeSelection.dragging = false;
+}
+
+function handleTimeSearchContextMenu(event) {
+  if (!TimeMode.value) {
+    return;
+  }
+
+  event.preventDefault();
+
+  // If right-button drag  to creating a selection, wait until the pointer up to submit it.
+  if (timeSelection.dragging) {
+    return;
+  }
+
+  if (!hasTimeSelection.value) {
+    return;
+  }
+
+  submitTimeSelection();
+}
+
+function submitTimeSelection() {
+  const selection = normalizedTimeSelection.value;
+
+  if (!selection) {
+    return;
+  }
+
+  store.dispatch("settimeSearchArgument", [
+    selection.weekday,
+    selection.startIndex,
+    selection.endIndex,
+  ]);
+
+  store.dispatch("setSearchTimeTable", true);
+}
+
+function selectionVerticalStyle(startIndex, endIndex) {
+  const startMinute =
+    TIMELINE_START_MINUTE + startIndex * TIMELINE_SLOT_MINUTES;
+
+  const endMinute =
+    TIMELINE_START_MINUTE + (endIndex + 1) * TIMELINE_SLOT_MINUTES;
+
+  const top = minuteToTimelineOffset(startMinute);
+  const bottom = minuteToTimelineOffset(endMinute);
+
+  return {
+    top: `${top}px`,
+    height: `${bottom - top}px`,
+  };
+}
+
+const timeSelectionStyle = computed(() => {
+  const selection = normalizedTimeSelection.value;
+
+  if (!selection) {
+    return {};
+  }
+
+  return {
+    ...selectionVerticalStyle(
+      selection.startIndex,
+      selection.endIndex,
+    ),
+
+    left: `${((selection.weekday - 1) / week.length) * 100}%`,
+
+    width: `${100 / week.length}%`,
+  };
+});
+
+const timeSelectionGuideStyle = computed(() => {
+  const selection = normalizedTimeSelection.value;
+
+  if (!selection) {
+    return {};
+  }
+
+  return selectionVerticalStyle(
+    selection.startIndex,
+    selection.endIndex,
+  );
+});
+
+function pointerToTimeSelection(event) {
+  const element = timelineDays.value;
+
+  if (!element) {
+    return null;
+  }
+
+  const rect = element.getBoundingClientRect();
+
+  const weekday = Math.min(
+    6,
+    Math.max(
+      1,
+      Math.floor(((event.clientX - rect.left) / rect.width) * 6) + 1,
+    ),
+  );
+
+  // e.g.: 64 / 2 = 32px per slot
+  const slotHeight = TIMELINE_HOUR_HEIGHT / 2;
+
+  const slot = Math.min(
+    29,
+    Math.max(0, Math.floor((event.clientY - rect.top) / slotHeight)),
+  );
+
+  return {
+    weekday,
+    slot,
+  };
+}
+
+function startTimeSelection(event) {
+  if (!TimeMode.value) {
+    return;
+  }
+
+  // Searching if there's a existing selection
+  if (event.button === 2 && hasTimeSelection.value) {
+    event.preventDefault();
+    return;
+  }
+
+  const point = pointerToTimeSelection(event);
+
+  if (!point) {
+    return;
+  }
+
+  event.preventDefault();
+
+  event.currentTarget.setPointerCapture?.(event.pointerId);
+
+  timeSelection.weekday = point.weekday;
+  timeSelection.startIndex = point.slot;
+  timeSelection.endIndex = point.slot;
+  timeSelection.dragging = true;
+}
+
+function moveTimeSelection(event) {
+  if (!TimeMode.value || !timeSelection.dragging) {
+    return;
+  }
+
+  const point = pointerToTimeSelection(event);
+
+  if (!point) {
+    return;
+  }
+
+  event.preventDefault();
+
+  timeSelection.endIndex = point.slot;
+}
+
+function finishTimeSelection(event) {
+  if (!timeSelection.dragging) {
+    return;
+  }
+
+  event.preventDefault();
+
+  timeSelection.dragging = false;
+
+  event.currentTarget.releasePointerCapture?.(event.pointerId);
+
+  // Right button selection search immediately on release.
+  if (event.button === 2) {
+    submitTimeSelection();
+  }
+}
 
 const selectedSession = ref(null);
 
@@ -552,44 +697,11 @@ watch(searchInput, async (inputValue) => {
   }
 });
 
-watch(selection, async () => {
-  for (let i = 0; i < 30; i++) {
-    selectDisplay.value[i].display = false;
-  }
-  for (let i = 0; i < selection.value.length; i++) {
-    selectDisplay.value[selection.value[i]["1"]].display = true;
-  }
-});
-
-async function showsearchclass(event) {
-  try {
-    store.dispatch("setSearchTimeTable", true);
-    store.dispatch("settimeSearchArgument", [
-      selection.value[0]["0"] + 1,
-      selection.value[0]["1"],
-      selection.value.slice(-1)[0]["1"],
-    ]);
-    selection.value = [];
-  } catch (error) {
-    console.error("Error in showsearchclass:", error);
-  }
-}
-
 onMounted(() => {
   store.dispatch("initAll");
   let ul = document.getElementById("result");
   if (ul != null) {
     ul.style.maxHeight = (2 * env.VITE_UL_ROW).toString() + "rem";
-  }
-  for (let index = 0; index <= 5; index++) {
-    let temp = [];
-    for (let j = 0; j < 30; j++) {
-      temp.push({ id: j, val: [index, j] });
-    }
-    selectClassTable.value.push(temp);
-  }
-  for (let i = 0; i < 30; i++) {
-    selectDisplay.value.push({ display: false });
   }
 });
 
@@ -704,11 +816,7 @@ const timelineSessions = computed(() => {
         weekday,
         startMinute,
         endMinute,
-        periodLabel: getClassPeriod(
-          rowIndex,
-          length,
-          course,
-        ),
+        periodLabel: getClassPeriod(rowIndex, length, course),
         course,
       });
     }
@@ -755,7 +863,8 @@ function getClassPeriod(rowIndex, length, course) {
   // Custom courses keeeping their original period in the classListStorage.
   if (course.getIsCustom()) {
     const courseList =
-      TotalCourseData.value?.[activeIndex.value]?.classListStorage ?? [];
+      TotalCourseData.value?.[activeIndex.value]?.classListStorage ??
+      [];
 
     const originalCourse = courseList.find(
       (item) => item.getUuid() === course.getUuid(),
@@ -800,5 +909,4 @@ function getClassPeriod(rowIndex, length, course) {
     .slice(startPosition, endPosition + 1)
     .join(", ");
 }
-
 </script>
