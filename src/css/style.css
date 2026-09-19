@@ -22,10 +22,6 @@
 .conflict {
   @apply bg-red-300;
 }
-.drag-select-option--selected {
-  background-color: rgb(254, 255, 166);
-  opacity: 0.4;
-}
 img {
   display: unset;
 }
